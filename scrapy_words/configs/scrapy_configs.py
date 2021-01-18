@@ -11,7 +11,7 @@ BOT_NAME = 'scrapy_words'
 LOG_LEVEL = 'INFO'
 DOWNLOADER_MIDDLEWARES = {
     'scrapy_words.middlewares.agent_middleware.RotateUserAgentMiddleware': 400,  # 切换agent
-    # 'scrapy_words.middlewares.auto_proxy_middleware.AutoProxyMiddleware': 543,  # 代理池
+    'scrapy_words.middlewares.auto_proxy_middleware.AutoProxyMiddleware': 543,  # 代理池
 }
 ITEM_PIPELINES = {
     'scrapy_words.pipelines.pipelines_csv.ScrapyIdxCsvPipeline': 300,

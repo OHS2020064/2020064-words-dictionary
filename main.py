@@ -30,4 +30,4 @@ def main(spider_name='mba'):
 
 
 if __name__ == '__main__':
-    main('secs_list')
+    main('mba')
