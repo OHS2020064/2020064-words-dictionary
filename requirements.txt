@@ -1,0 +1,5 @@
+scrapy>=2.4.1
+pytz>=2020.5
+grequests~=0.6.0
+bs4>=0.0.1
+func-timeout>=4.3.5

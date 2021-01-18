@@ -1,0 +1,2 @@
+import scrapy_words.middlewares.agent_middleware
+import scrapy_words.middlewares.auto_proxy_middleware

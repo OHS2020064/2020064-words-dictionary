@@ -1,0 +1,1 @@
+import scrapy_words.configs.scrapy_configs

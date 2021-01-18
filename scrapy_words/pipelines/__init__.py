@@ -1,0 +1,2 @@
+import scrapy_words.pipelines.pipelines_csv
+import scrapy_words.pipelines.pipelines_request
