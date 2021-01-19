@@ -37,29 +37,55 @@ class MBASpider(BaseSpider):
     def parse(self, response, **kwargs):
         results = []
         for i, div in enumerate(response.xpath('//div[@class="headline-2"]')):
+            if i > 0:
+                continue
             item = MBAWordItem()
             name = div.xpath('.//h2/text()').extract_first()
-            item['cat'] = name
+            item['parent'] = ''
+            item['cat'] = ''
             item['word'] = name
             item['word_level'] = 110
             item['pos'] = 'n'
             results.append(item)
-            for a in div.xpath('../div[3]//a'):
+            for j, a in enumerate(div.xpath('../div[3]//a')):
+                if j > 0:
+                    continue
                 url = a.xpath('.//@href').extract_first()
                 child_item = MBAWordItem()
-                child_item['cat'] = name
+                child_item['parent'] = name
+                child_item['cat'] = 'categories'
                 child_item['word'] = a.xpath('.//text()').extract_first()
                 child_item['word_level'] = 109
                 child_item['pos'] = 'n'
                 results.append(child_item)
-                # results.append(scrapy.Request('https://%s/%s' % (self.configs('allowed_domains')[0], url),
-                #                               headers=create_headers(),
-                #                               callback=self.parse_cats))
+                results.append(scrapy.Request('https://%s/%s' % (self.configs('allowed_domains')[0], url),
+                                              meta=child_item,
+                                              headers=create_headers(),
+                                              callback=self.parse_words))
         return results
 
-    def parse_cats(self, response):
-        print('resp: %s, %s' % (self.name, response.body.decode()))
-        for td in response.xpath('//*[@id="bodyContent"]/table/tbody/tr/td'):
-            for h3 in td.xpath('.//h3'):
-                print(h3.xpath('.//text()').extract_first())
+    def parse_words(self, response):
+        print('parse_words: %s' % self.name)
+        parent_result = response.request.meta
+        results = []
+        for i, a in enumerate(response.xpath('//tr[@valign="top"]//a')):
+            text = a.xpath('.//text()').extract_first()
+            if text == '+':
+                continue
+            child_item = MBAWordItem()
+            child_item['parent'] = parent_result['word']
+            child_item['cat'] = 'categories'
+            child_item['word'] = text
+            child_item['word_level'] = parent_result['word_level'] - 1
+            child_item['pos'] = 'n'
+            results.append(child_item)
+        for j, a in enumerate(response.xpath('//div[@class="page_ul"]//a')):
+            child_item = MBAWordItem()
+            child_item['parent'] = parent_result['word']
+            child_item['cat'] = 'word'
+            child_item['word'] = a.xpath('.//text()').extract_first()
+            child_item['word_level'] = parent_result['word_level'] - 1
+            child_item['pos'] = 'n'
+            results.append(child_item)
+        return results
         pass
