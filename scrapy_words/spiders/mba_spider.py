@@ -5,6 +5,7 @@ import scrapy
 
 from scrapy_words.items.mba_word_item import MBAWordItem
 from scrapy_words.spiders.base_spider import BaseSpider
+from scrapy_words.utils.logger_utils import logger
 
 
 def create_headers():
@@ -37,48 +38,58 @@ class MBASpider(BaseSpider):
     def parse(self, response, **kwargs):
         results = []
         for i, div in enumerate(response.xpath('//div[@class="headline-2"]')):
-            if i > 0:
-                continue
             item = MBAWordItem()
             name = div.xpath('.//h2/text()').extract_first()
             item['parent'] = ''
             item['cat'] = ''
             item['word'] = name
-            item['word_level'] = 110
+            item['word_level'] = 120
             item['pos'] = 'n'
-            results.append(item)
+            # results.append(item)
+            yield item
             for j, a in enumerate(div.xpath('../div[3]//a')):
-                if j > 0:
-                    continue
                 url = a.xpath('.//@href').extract_first()
+                logger.info('url: %s' % url)
                 child_item = MBAWordItem()
                 child_item['parent'] = name
                 child_item['cat'] = 'categories'
                 child_item['word'] = a.xpath('.//text()').extract_first()
-                child_item['word_level'] = 109
+                child_item['word_level'] = 119
                 child_item['pos'] = 'n'
-                results.append(child_item)
-                results.append(scrapy.Request('https://%s/%s' % (self.configs('allowed_domains')[0], url),
-                                              meta=child_item,
-                                              headers=create_headers(),
-                                              callback=self.parse_words))
-        return results
+                # results.append(child_item)
+                yield child_item
+                req = scrapy.Request('https://%s%s' % (self.configs('allowed_domains')[0], url),
+                                     meta=child_item,
+                                     headers=create_headers(),
+                                     callback=self.parse_words)
+                # results.append(req)
+                yield req
+        # return results
 
     def parse_words(self, response):
-        print('parse_words: %s' % self.name)
         parent_result = response.request.meta
         results = []
-        for i, a in enumerate(response.xpath('//tr[@valign="top"]//a')):
+        for i, a in enumerate(response.xpath('//div[@class="CategoryTreeItem"]//a')):
             text = a.xpath('.//text()').extract_first()
-            if text == '+':
+            url = a.xpath('.//@href').extract_first()
+            if text == '+' or len(url) < 20:
                 continue
+            logger.info('parse_words: %s' % response.request.url)
+            logger.info('url: %s' % url)
             child_item = MBAWordItem()
             child_item['parent'] = parent_result['word']
             child_item['cat'] = 'categories'
             child_item['word'] = text
             child_item['word_level'] = parent_result['word_level'] - 1
             child_item['pos'] = 'n'
-            results.append(child_item)
+            # results.append(child_item)
+            yield child_item
+            req = scrapy.Request('https://%s%s' % (self.configs('allowed_domains')[0], url),
+                                 meta=child_item,
+                                 headers=create_headers(),
+                                 callback=self.parse_words)
+            # results.append(req)
+            yield req
         for j, a in enumerate(response.xpath('//div[@class="page_ul"]//a')):
             child_item = MBAWordItem()
             child_item['parent'] = parent_result['word']
@@ -86,6 +97,7 @@ class MBASpider(BaseSpider):
             child_item['word'] = a.xpath('.//text()').extract_first()
             child_item['word_level'] = parent_result['word_level'] - 1
             child_item['pos'] = 'n'
-            results.append(child_item)
-        return results
+            # results.append(child_item)
+            yield child_item
+        # return results
         pass

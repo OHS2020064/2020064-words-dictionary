@@ -207,8 +207,8 @@ class AutoProxyMiddleware(object):
         获取新的代理，目前从三个网站抓取代理，每个网站开一个线程抓取代理。
         """
         logger.info('Starting fetch new proxy.')
-        # urls = ['xici', 'ip3336', 'kxdaili']
-        urls = ['kxdaili']
+        # urls = ['xici', 'ip3336', 'kxdaili', 'xil']
+        urls = ['xil']
         threads = []
         for url in urls:
             t = ProxyFetch(self.proxies, url)
@@ -304,7 +304,7 @@ class ProxyValidate(threading.Thread):
             return False
 
 
-@func_set_timeout(5)
+@func_set_timeout(10)
 def get_soup(url):
     req = urllib.request.Request(url)
     req.add_header("User-Agent",
@@ -335,6 +335,24 @@ class ProxyFetch(threading.Thread):
 
     def run(self):
         self.proxies.update(getattr(self, 'fetch_proxy_from_' + self.url)())
+
+    def fetch_proxy_from_xil(self):
+        logger.info('get proxies from: %s' % self.url)
+        proxies = {}
+        url = 'http://www.xiladaili.com/'
+        try:
+            soup = get_soup(url)
+            trs = soup.find("table", attrs={"class": "fl-table"}).tbody.find_all("tr")
+            for j, tr in enumerate(trs):
+                tds = tr.find_all("td")
+                td = tds[0].string.strip()
+                ip = td.split(':')[0]
+                port = td.split(':')[1]
+                proxy = ''.join(['http://', ip, ':', port])
+                proxies[proxy] = False
+        except Exception as e:
+            logger.error('Failed to fetch_proxy_from_xil. Exception[%s]', e)
+        return proxies
 
     def fetch_proxy_from_ip3336(self):
         logger.info('get proxies from: %s' % self.url)
