@@ -28,7 +28,7 @@ AUTO_PROXY = {  # 代理池中间件设置，详见Github
     'init_valid_proxies': 5,
 }
 
-DEVELOP = False
+DEBUG = True
 
 FILE_OUTPUT = True
 API_OUTPUT = False

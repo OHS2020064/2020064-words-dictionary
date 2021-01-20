@@ -32,8 +32,7 @@ class MBASpider(BaseSpider):
 
     def start_requests(self):
         super().start_requests()
-        return [scrapy.Request(self.start_urls[0],
-                               callback=self.parse), ]
+        return [scrapy.Request(self.start_urls[0], callback=self.parse)]
 
     def parse(self, response, **kwargs):
         results = []

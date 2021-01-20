@@ -34,7 +34,7 @@ class AutoProxyMiddleware(object):
 
     def __init__(self, proxy_set=None):
         self.enable = True
-        self.init_valid_proxies = 1
+        self.init_valid_proxies = 3
         self.test_thread_nums = 20
         self.proxy_least = 3
         self.invalid_limit = 200
@@ -69,7 +69,6 @@ class AutoProxyMiddleware(object):
 
         if self.len_valid_proxy() > 0:
             self.set_proxy(request)
-            # if 'download_timeout' not in request.meta:
             request.meta['download_timeout'] = self.download_timeout
         else:
             # 没有可用代理，直连
@@ -120,10 +119,10 @@ class AutoProxyMiddleware(object):
 
         elif isinstance(exception, TimeoutError):
             print('TimeoutError了,此时返回request')
-            # return request
+            return request
         elif isinstance(exception, TypeError):
             print('TypeError,此时返回request')
-            # return request
+            return request
 
     def invalid_proxy(self, proxy):
         """
@@ -166,7 +165,6 @@ class AutoProxyMiddleware(object):
             self.change_proxy()
 
         request.meta['proxy'] = self.proxy[self.proxy_index]
-        # logger.info('Set proxy. request.meta: %s', request.meta)
 
     def len_valid_proxy(self):
         """
@@ -304,11 +302,11 @@ def get_soup(url):
             logger.error('Failed to fetch_proxy_from_xil. retry %i times', retry_count)
             break
         try:
-            html_doc = next(request_utils.get(url, headers={
+            html_doc = request_utils.get(url, headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/47.0.2526.106 "
                               "Safari/537.36"
-            })).content.decode()
+            }, timeout=10)[0].content.decode()
             break
         except Exception as e:
             logger.error("Fetch proxy from {} fail, will try later.".format(url))
@@ -337,7 +335,7 @@ class ProxyFetch(threading.Thread):
         try:
             soup = get_soup(url)
             trs = soup.find("table", attrs={"class": "fl-table"}).tbody.find_all("tr")
-            for j, tr in enumerate(trs):
+            for i, tr in enumerate(trs):
                 tds = tr.find_all("td")
                 td = tds[0].string.strip()
                 ip = td.split(':')[0]

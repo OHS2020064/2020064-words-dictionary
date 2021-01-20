@@ -11,17 +11,20 @@ def err_handler(request, exception):
         logger.error(exception)
 
 
-def get(url, headers=scrapy_configs.configs('headers')):
+def get(url, headers=scrapy_configs.configs('headers'), timeout=None):
     if scrapy_configs.configs('debug'):
         logger.info(url)
     req_list = [grequests.request("GET",
                                   url=url,
                                   headers=headers,
                                   timeout=10)]
-    return grequests.imap(req_list, exception_handler=err_handler)
+    if timeout is None:
+        return grequests.imap(req_list, exception_handler=err_handler)
+    else:
+        return grequests.map(req_list, exception_handler=err_handler, gtimeout=timeout)
 
 
-def post(url, item, headers=scrapy_configs.configs('headers')):
+def post(url, item, headers=scrapy_configs.configs('headers'), timeout=None):
     if scrapy_configs.configs('debug'):
         logger.info(url)
         logger.info(json.dumps(item, ensure_ascii=False))
@@ -30,4 +33,7 @@ def post(url, item, headers=scrapy_configs.configs('headers')):
                                   data=json.dumps(item),
                                   headers=headers,
                                   timeout=10)]
-    return grequests.imap(req_list, exception_handler=err_handler)
+    if timeout is None:
+        return grequests.imap(req_list, exception_handler=err_handler)
+    else:
+        return grequests.map(req_list, exception_handler=err_handler, gtimeout=timeout)
