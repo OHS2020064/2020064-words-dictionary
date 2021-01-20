@@ -25,7 +25,7 @@ DOWNLOAD_DELAY = 2
 COOKIES_ENABLED = False
 AUTO_PROXY = {  # 代理池中间件设置，详见Github
     'ban_code': [500, 502, 503, 400, 504],
-    'init_valid_proxies': 2,
+    'init_valid_proxies': 5,
 }
 
 DEVELOP = False

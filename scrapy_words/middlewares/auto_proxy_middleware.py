@@ -7,11 +7,11 @@ import time
 from urllib.error import HTTPError
 
 from bs4 import BeautifulSoup
-from func_timeout import func_set_timeout, func_timeout, FunctionTimedOut
 from twisted.internet import defer
 from twisted.internet.error import TimeoutError, ConnectionRefusedError, \
     ConnectError, ConnectionLost, TCPTimedOutError, ConnectionDone
 
+from scrapy_words.utils import request_utils
 from scrapy_words.utils.logger_utils import logger
 
 
@@ -233,13 +233,10 @@ class AutoProxyMiddleware(object):
             t.start()
 
         try:
-            soup = func_timeout(50, self.ensure_has_valid_proxy, args=(wait, threads))
-        except FunctionTimedOut:
-            logger.info("func:there is no valid proxy,go next step")
+            self.ensure_has_valid_proxy(wait, threads)
         except Exception as e:
             logger.info(e)
 
-    @func_set_timeout(50)
     def ensure_has_valid_proxy(self, wait, threads):
         # 初始化该中间件时，等待有可用的代理
         if wait:
@@ -273,21 +270,16 @@ class ProxyValidate(threading.Thread):
         self.test_proxies(self.part)
 
     def test_proxies(self, proxies):
-        from func_timeout import func_timeout, FunctionTimedOut
         for proxy, valid in proxies.items():
             check_proxy_res = False
             try:
-                check_proxy_res = func_timeout(12, self.check_proxy, args=(proxy,))
-            except FunctionTimedOut:
-                logger.info("func:check_proxy can't finished within 6 second,try next check")
+                check_proxy_res = self.check_proxy(proxy)
             except Exception as e:
                 logger.info(e)
-            # if self.check_proxy(proxy):
             if check_proxy_res:
                 self.auto_proxy.proxies[proxy] = True
                 self.auto_proxy.append_proxy(proxy)
 
-    @func_set_timeout(12)
     def check_proxy(self, proxy):
         proxy_handler = urllib.request.ProxyHandler({'http': proxy})
         opener = urllib.request.build_opener(proxy_handler, urllib.request.HTTPHandler)
@@ -304,25 +296,27 @@ class ProxyValidate(threading.Thread):
             return False
 
 
-@func_set_timeout(10)
 def get_soup(url):
-    req = urllib.request.Request(url)
-    req.add_header("User-Agent",
-                   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 "
-                   "Safari/537.36")
+    retry_count = 3
+    html_doc = None
     while True:
-        try:
-            resp = urllib.request.urlopen(req, timeout=10)
-            html_doc = resp.read()
+        if retry_count <= 0:
+            logger.error('Failed to fetch_proxy_from_xil. retry %i times', retry_count)
             break
-        except HTTPError:
-            return None
-        except ValueError:
-            logger.info("Fetch proxy from {} fail, will try later.".format(url))
-            time.sleep(120)
+        try:
+            html_doc = next(request_utils.get(url, headers={
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/47.0.2526.106 "
+                              "Safari/537.36"
+            })).content.decode()
+            break
+        except Exception as e:
+            logger.error("Fetch proxy from {} fail, will try later.".format(url))
+            logger.error(e)
+            time.sleep(60)
+        retry_count = retry_count - 1
 
     soup = BeautifulSoup(html_doc, features='lxml')
-
     return soup
 
 
@@ -379,16 +373,8 @@ class ProxyFetch(threading.Thread):
         proxies = {}
         url = 'http://www.kxdaili.com/dailiip/1/%d.html'
         try:
-            from func_timeout import func_timeout, FunctionTimedOut
             for i in range(1, 11):
-                soup = None
-                try:
-                    # soup = get_soup(url % i)
-                    soup = func_timeout(5, get_soup, args=(url % i,))
-                except FunctionTimedOut:
-                    logger.info("func:get_soup can't get proxy within 5 second,try next")
-                except Exception as e:
-                    logger.info(e)
+                soup = get_soup(url % i)
                 if soup is None:
                     continue
                 trs = soup.find("table", attrs={"class": "active"}).find_all("tr")
