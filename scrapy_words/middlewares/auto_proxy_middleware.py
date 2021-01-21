@@ -4,7 +4,6 @@ import threading
 import math
 import re
 import time
-from urllib.error import HTTPError
 
 from bs4 import BeautifulSoup
 from twisted.internet import defer
@@ -34,7 +33,7 @@ class AutoProxyMiddleware(object):
 
     def __init__(self, proxy_set=None):
         self.enable = True
-        self.init_valid_proxies = 3
+        self.init_valid_proxies = 5
         self.test_thread_nums = 20
         self.proxy_least = 3
         self.invalid_limit = 200
@@ -106,17 +105,17 @@ class AutoProxyMiddleware(object):
             self.counter_proxy[p] = self.counter_proxy.setdefault(p, 1) + 1
         return response
 
-    def process_exception(self, request, exception):
-
+    def process_exception(self, request, exception, spider):
         from twisted.internet.error import TimeoutError
-        if isinstance(exception, self.EXCEPTIONS_TO_CHANGE) \
-                and request.meta.get('proxy', False):
-            self.invalid_proxy(request.meta['proxy'])
-            logger.debug("Proxy[%s] connect exception[%s].", request.meta['proxy'], exception)
-            new_request = request.copy()
-            new_request.dont_filter = True
-            return new_request
-
+        if isinstance(exception, self.EXCEPTIONS_TO_CHANGE):
+            new_request = None
+            if 'proxy' in request.meta:
+                self.invalid_proxy(request.meta['proxy'])
+                logger.info("Proxy[%s] connect exception[%s].", request.meta['proxy'], exception)
+                new_request = request.copy()
+                new_request.dont_filter = True
+            if new_request is not None:
+                return new_request
         elif isinstance(exception, TimeoutError):
             print('TimeoutError了,此时返回request')
             return request
@@ -309,8 +308,7 @@ def get_soup(url):
             }, timeout=10)[0].content.decode()
             break
         except Exception as e:
-            logger.error("Fetch proxy from {} fail, will try later.".format(url))
-            logger.error(e)
+            logger.error("Fetch proxy from {} fail with {}, will try later.".format(url, e))
             time.sleep(60)
         retry_count = retry_count - 1
 
