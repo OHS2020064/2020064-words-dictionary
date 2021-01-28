@@ -205,7 +205,7 @@ class AutoProxyMiddleware(object):
         """
         logger.info('Starting fetch new proxy.')
         # urls = ['xici', 'ip3336', 'kxdaili', 'xil']
-        urls = ['xil']
+        urls = ['kxdaili']
         threads = []
         for url in urls:
             t = ProxyFetch(self.proxies, url)
@@ -298,18 +298,18 @@ def get_soup(url):
     html_doc = None
     while True:
         if retry_count <= 0:
-            logger.error('Failed to fetch_proxy_from_xil. retry %i times', retry_count)
+            logger.error('Failed to fetch_proxy. retry complete')
             break
         try:
-            html_doc = request_utils.get(url, headers={
+            html_doc = request_utils.get('https://www.google.com', headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/47.0.2526.106 "
                               "Safari/537.36"
-            }, timeout=10)[0].content.decode()
+            }, g_timeout=10)[0].content.decode()
             break
         except Exception as e:
             logger.error("Fetch proxy from {} fail with {}, will try later.".format(url, e))
-            time.sleep(60)
+            time.sleep(30)
         retry_count = retry_count - 1
 
     soup = BeautifulSoup(html_doc, features='lxml')
