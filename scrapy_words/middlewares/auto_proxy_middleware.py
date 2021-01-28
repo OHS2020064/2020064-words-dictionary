@@ -301,7 +301,7 @@ def get_soup(url):
             logger.error('Failed to fetch_proxy. retry complete')
             break
         try:
-            html_doc = request_utils.get('https://www.google.com', headers={
+            html_doc = request_utils.get(url, headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/47.0.2526.106 "
                               "Safari/537.36"
