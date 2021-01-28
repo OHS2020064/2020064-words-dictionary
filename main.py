@@ -16,6 +16,10 @@ def main(spider_name='mba'):
     spiders = {
         'mba': scrapy_words.spiders.mba_spider.MBASpider,
         'secs_list': scrapy_words.spiders.secs_ls_spider.SecsLSSpider,
+        'c_sec_2_1': scrapy_words.spiders.c_sec_spider.CSec21Spider,
+        'c_sec_2_2': scrapy_words.spiders.c_sec_spider.CSec22Spider,
+        'c_sec_2_3': scrapy_words.spiders.c_sec_spider.CSec23Spider,
+        'c_sec_2_4': scrapy_words.spiders.c_sec_spider.CSec24Spider,
     }
     spider = spiders[spider_name]
     for (k, v) in spiders.items():
@@ -30,4 +34,4 @@ def main(spider_name='mba'):
 
 
 if __name__ == '__main__':
-    main('mba')
+    main('c_sec_2_2')

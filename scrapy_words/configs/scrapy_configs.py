@@ -3,6 +3,7 @@ import os
 
 from scrapy.utils.project import get_project_settings
 
+from scrapy_words.configs.c_sec_configs import c_sec_default
 from scrapy_words.configs.mba_configs import mba_default
 from scrapy_words.configs.securities_ls_configs import securities_ls_default
 
@@ -37,6 +38,7 @@ FILE_OUTPUT_PATH = os.path.join(os.path.abspath('./'), 'exports')
 # spider default config
 MBA = mba_default
 SECS_LIST = securities_ls_default
+C_SEC = c_sec_default
 
 
 def configs(config_name, spider_name=None):

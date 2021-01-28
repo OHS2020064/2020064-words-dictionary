@@ -5,3 +5,4 @@
 
 import scrapy_words.spiders.mba_spider
 import scrapy_words.spiders.secs_ls_spider
+import scrapy_words.spiders.c_sec_spider
