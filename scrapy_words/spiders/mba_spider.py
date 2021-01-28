@@ -113,4 +113,21 @@ class MBASpider(BaseSpider):
             # results.append(child_item)
             yield child_item
         # return results
+
+        title = 'Category:%s' % parent_result['word']
+        next_page = 0
+        for k, a in enumerate(response.xpath('//a[@title="%s"]' % title)):
+            text = a.xpath('.//text()').extract_first()
+            if next_page > 0:
+                continue
+            elif text == '后200条':
+                next_page = 1
+                url = a.xpath('.//@href').extract_first()
+                print('后200条：%shttps://%s%s' % (title, self.configs('allowed_domains')[0], url))
+                req = scrapy.Request(('https://%s%s' % (self.configs('allowed_domains')[0], url)),
+                                     meta=parent_result,
+                                     headers=(create_headers()),
+                                     callback=(self.parse_words))
+                yield req
+
         pass
