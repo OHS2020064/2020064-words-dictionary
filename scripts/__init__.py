@@ -15,7 +15,7 @@ def process_line(line):
 
 def export():
     export_path = os.path.join(os.path.abspath('../'), 'exports')
-    folders = ['20210125', '20210126']
+    folders = ['20210125']
     results = []
     file_names = []
     for folder in folders:
