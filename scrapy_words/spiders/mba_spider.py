@@ -1,6 +1,8 @@
 """
 MBA智库
 """
+import os
+
 import scrapy
 
 from scrapy_words.items.mba_word_item import MBAWordItem
@@ -36,7 +38,16 @@ class MBASpider(BaseSpider):
 
     def parse(self, response, **kwargs):
         results = []
+        idx = 0
+        cat_path = os.path.join(os.path.abspath('./'), 'scripts', 'cats.txt')
+        keys = []
+        with open(cat_path, 'r', errors='ignore', encoding='utf-8') as f:
+            text = f.read().strip()
+            keys = text.splitlines()[idx:idx+1]
+        logger.info('scrapy: %s' % keys)
         for i, div in enumerate(response.xpath('//div[@class="headline-2"]')):
+            # if i > idx or i < idx:
+            #     continue
             item = MBAWordItem()
             name = div.xpath('.//h2/text()').extract_first()
             item['parent'] = ''
@@ -47,12 +58,15 @@ class MBASpider(BaseSpider):
             # results.append(item)
             yield item
             for j, a in enumerate(div.xpath('../div[3]//a')):
+                word = a.xpath('.//text()').extract_first()
+                if word not in keys:
+                    continue
                 url = a.xpath('.//@href').extract_first()
                 logger.info('url: %s' % url)
                 child_item = MBAWordItem()
                 child_item['parent'] = name
                 child_item['cat'] = 'categories'
-                child_item['word'] = a.xpath('.//text()').extract_first()
+                child_item['word'] = word
                 child_item['word_level'] = 119
                 child_item['pos'] = 'n'
                 # results.append(child_item)
