@@ -14,6 +14,7 @@ def err_handler(request, exception):
 def get(url, headers=scrapy_configs.configs('headers'), timeout=(3, 10), g_timeout=None):
     if scrapy_configs.configs('debug'):
         logger.info(url)
+
     req_list = [grequests.get(url=url,
                               headers=headers,
                               timeout=timeout)]

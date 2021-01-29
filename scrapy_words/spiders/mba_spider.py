@@ -38,13 +38,16 @@ class MBASpider(BaseSpider):
 
     def parse(self, response, **kwargs):
         results = []
-        idx = 0
+        idx = 198
         cat_path = os.path.join(os.path.abspath('./'), 'scripts', 'cats.txt')
         keys = []
         with open(cat_path, 'r', errors='ignore', encoding='utf-8') as f:
             text = f.read().strip()
-            keys = text.splitlines()[idx:idx+1]
-        logger.info('scrapy: %s' % keys)
+            keys = text.splitlines()[idx:idx+2]
+        log_keys = ''
+        for log_key in keys:
+            log_keys = '%s_%s' % (log_keys, log_key)
+        logger.info('scrapy: %s' % log_keys)
         for i, div in enumerate(response.xpath('//div[@class="headline-2"]')):
             # if i > idx or i < idx:
             #     continue
@@ -127,7 +130,7 @@ class MBASpider(BaseSpider):
                 req = scrapy.Request(('https://%s%s' % (self.configs('allowed_domains')[0], url)),
                                      meta=parent_result,
                                      headers=(create_headers()),
-                                     callback=(self.parse_words))
+                                     callback=self.parse_words)
                 yield req
 
         pass

@@ -15,7 +15,7 @@ def process_line(line):
 
 def export():
     export_path = os.path.join(os.path.abspath('../'), 'exports')
-    folders = ['20210125']
+    folders = ['20210128']
     results = []
     file_names = []
     for folder in folders:
@@ -31,12 +31,12 @@ def export():
                 text = f.read().strip()
                 lines = ['%s\n' % process_line(line) for line in text.splitlines()[1:]]
             results += lines
-    to_file_path = os.path.join(os.path.abspath('./'), 'finance_dict.txt')
+    to_file_path = os.path.join(os.path.abspath('./'), 'finance_dict_.txt')
     with open(to_file_path, 'w', encoding='utf-8') as file:
         file.writelines(results)
-    to_file_path = os.path.join(os.path.abspath('./'), 'cats.txt')
-    with open(to_file_path, 'w', encoding='utf-8') as file:
-        file.writelines(file_names)
+    # to_file_path = os.path.join(os.path.abspath('./'), 'cats.txt')
+    # with open(to_file_path, 'w', encoding='utf-8') as file:
+    #     file.writelines(file_names)
     pass
 
 

@@ -5,6 +5,7 @@ import math
 import re
 import time
 
+import requests
 from bs4 import BeautifulSoup
 from twisted.internet import defer
 from twisted.internet.error import TimeoutError, ConnectionRefusedError, \
@@ -205,7 +206,7 @@ class AutoProxyMiddleware(object):
         """
         logger.info('Starting fetch new proxy.')
         # urls = ['xici', 'ip3336', 'kxdaili', 'xil']
-        urls = ['kxdaili']
+        urls = ['xil']
         threads = []
         for url in urls:
             t = ProxyFetch(self.proxies, url)
@@ -288,12 +289,11 @@ class ProxyValidate(threading.Thread):
                     return False
             return True
         except Exception as e:
-            if e is None:
-                logger.error('Failed to check_proxy. Exception[%s]', e)
+            logger.error('Failed to check_proxy %s. Exception[%s]' % (proxy, e))
             return False
 
 
-def get_soup(url):
+def get_soup(url, codec='utf-8'):
     retry_count = 3
     html_doc = None
     while True:
@@ -301,11 +301,11 @@ def get_soup(url):
             logger.error('Failed to fetch_proxy. retry complete')
             break
         try:
-            html_doc = request_utils.get(url, headers={
+            html_doc = next(request_utils.get(url, headers={
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/47.0.2526.106 "
                               "Safari/537.36"
-            }, g_timeout=10)[0].content.decode()
+            })).content.decode(codec)
             break
         except Exception as e:
             logger.error("Fetch proxy from {} fail with {}, will try later.".format(url, e))
@@ -329,10 +329,11 @@ class ProxyFetch(threading.Thread):
     def fetch_proxy_from_xil(self):
         logger.info('get proxies from: %s' % self.url)
         proxies = {}
-        url = 'http://www.xiladaili.com/'
+        url = 'http://www.xiladaili.com/gaoni/2/'
         try:
             soup = get_soup(url)
             trs = soup.find("table", attrs={"class": "fl-table"}).tbody.find_all("tr")
+            logger.info('proxies len: %i' % len(trs))
             for i, tr in enumerate(trs):
                 tds = tr.find_all("td")
                 td = tds[0].string.strip()
@@ -349,8 +350,8 @@ class ProxyFetch(threading.Thread):
         proxies = {}
         url = 'http://www.ip3366.net/free/?stype=1&page='
         try:
-            for i in range(1, 6):
-                soup = get_soup(url + str(i))
+            for i in range(1, 2):
+                soup = get_soup(url + str(i), codec='gb2312')
                 trs = soup.find("div", attrs={"id": "list"}).table.find_all("tr")
                 for j, tr in enumerate(trs):
                     if 0 == j:
@@ -369,7 +370,7 @@ class ProxyFetch(threading.Thread):
         proxies = {}
         url = 'http://www.kxdaili.com/dailiip/1/%d.html'
         try:
-            for i in range(1, 11):
+            for i in range(1, 2):
                 soup = get_soup(url % i)
                 if soup is None:
                     continue
